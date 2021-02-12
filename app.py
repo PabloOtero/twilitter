@@ -8,8 +8,6 @@ import dash_html_components as html
 import pandas as pd
 from dash.dependencies import Input, Output, State
 
-from boto.s3.connection import S3Connection
-
 #import cufflinks as cf
 
 # Initialize app
@@ -36,7 +34,7 @@ df = pd.read_csv(
 
 #mapbox_token hidden in file
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
-mapbox_access_token = S3Connection(os.environ['MAPBOX_ACCESS_TOKEN'])
+mapbox_access_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
 #mapbox_access_token = "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6ImNrOWJqb2F4djBnMjEzbG50amg0dnJieG4ifQ.Zme1-Uzoi75IaFbieBDl3A"
 px.set_mapbox_access_token(mapbox_access_token)
 #px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
