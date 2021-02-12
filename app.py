@@ -32,10 +32,9 @@ df = pd.read_csv(
 )
 
 
-#mapbox_token hidden in file
+#mapbox_token hidden in file (or in this case, load it from Heroku dashboard)
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
 mapbox_access_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
-#mapbox_access_token = "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6ImNrOWJqb2F4djBnMjEzbG50amg0dnJieG4ifQ.Zme1-Uzoi75IaFbieBDl3A"
 px.set_mapbox_access_token(mapbox_access_token)
 #px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
 
@@ -83,7 +82,7 @@ app.layout = html.Div(
                 ),
                 html.P(
                     id="description2",
-                    children="To learn more and cite: Otero, P., J. Gago, P. Quintás, 2021. Twitter data analysis \
+                    children="To learn more and cite: Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis \
                     to assess the interest of citizens on the  impact of marine plastic pollution. Submitted.",
                 ),                    
             ],
