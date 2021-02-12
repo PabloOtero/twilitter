@@ -371,26 +371,26 @@ def display_selected_data(selected_points, chart_dropdown, relayoutData):
         dff_cities = dff[['city_from_profile']].dropna()
         dff_cities = dff_cities['city_from_profile'].value_counts()
         dff_cities=dff_cities[:20]
-        title='Cities with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
+        title='Cities with more tweets (either geopositioning or user profile) <br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
 
         fig = px.bar(dff_cities, x=dff_cities.index, y='city_from_profile', \
                      title=title, color_discrete_sequence =['#7FDBFF']*len(dff_cities),
                      labels={
                      "x": "Top cities",
-                     "city_from_profile": "Tweet volume from city",
+                     "city_from_profile": "Tweet volume",
                      },
         )
     else:
         dff_countries = dff[['country_from_profile']].dropna()
         dff_countries = dff_countries['country_from_profile'].value_counts()
         dff_countries=dff_countries[:20]
-        title='Countries with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
+        title='Nationalities (from user profile) with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
         
         fig = px.bar(dff_countries, x=dff_countries.index, y='country_from_profile', \
                      title=title, color_discrete_sequence =['#7FDBFF']*len(dff_countries),
                      labels={
-                     "x": "Top countries",
-                     "country_from_profile": "Tweet volume from country",
+                     "x": "Top nationalities",
+                     "country_from_profile": "Tweet volume",
                      },
         )
                
