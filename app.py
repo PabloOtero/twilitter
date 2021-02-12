@@ -33,7 +33,9 @@ df = pd.read_csv(
 
 #mapbox_token hidden in file
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
-px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
+mapbox_access_token = "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6ImNrOWJqb2F4djBnMjEzbG50amg0dnJieG4ifQ.Zme1-Uzoi75IaFbieBDl3A"
+px.set_mapbox_access_token(mapbox_access_token)
+#px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
 
 
 # Plot time series once
