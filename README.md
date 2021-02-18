@@ -3,7 +3,7 @@
 
 [Have a look to this app][app]
 
-[alt text](https://github.com/PabloOtero/twilitter/blob/main/images/twilitter.png?raw=true)
+[alt text](https://github.com/PabloOtero/twilitter/blob/main/images/twilitter.png)
 
 ## Features
 
