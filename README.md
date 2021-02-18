@@ -1,5 +1,9 @@
 # Twilitter
-## _Python Dash app to visualize tweets about marine pollution by plastics_🥄🥛🌊
+## Python Dash app to visualize tweets about marine pollution by plastics 🥄🥛🌊
+
+[Have a look to this app][app]
+
+[alt text](https://github.com/PabloOtero/twilitter/blob/main/images/twilitter.png?raw=true)
 
 ## Features
 
@@ -7,4 +11,16 @@
 - Subset data by space and/or time
 - Discover most used hashtags, counts with more engagement, top cities, nationalities, etc. 
 
-![alt text](https://github.com/PabloOtero/twilitter/images/twilitter.png?raw=true)
+## Preprocessing (...to create our csv file)
+
+This Dash app loads data from a csv file. This file contains info related to tweets, which means that a preprocessing has been done. It is not the objective of this repository to show the applied preprocessing techniques. However, a summary would be:
+- Tweets containing the word 'plastic' or 'microplastic' in combination with any of these words: 'coast[s]', 'sea', 'ocean[s]', 'beach', 'marine' have been previously retrieved using the Twitter API. As the free plan is being used, the Twitter database is scrapped every week. 
+- The tweets have been obtained in a wide number of languages, which has required a prior translation of key words.
+- In a second phase, tweets are filtered to discard those not directly related to marine pollution. For example, those tweets mentioning 'Plastic Beach', the third studio album by British virtual band [Gorillaz][wiki].
+- Sentiment analysis is computed, coordinates obtained from user profile whenever possible by using OpenStreetMap, etc.
+- Data are stored in csv files.
+
+As the original files are very large, another csv file has been created containing the minimum information necessary for the Dash application. You can find an example in 'data' folder.
+
+To learn more about the preprocessing:
+_Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis to assess the interest of citizens on the  impact of marine plastic pollution. Submitted._
