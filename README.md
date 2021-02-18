@@ -28,7 +28,10 @@ _Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis to assess the inter
 ### Running the app locally
 We suggest you to create a separate virtual environment running Python 3 for this app, and install all of the required dependencies there.
 
+_Inspired in [Dash Opioid epidemic example][dash]_
+
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
    [wiki]: <https://en.wikipedia.org/wiki/Plastic_Beach>
    [app]: <http://twilitter.herokuapp.com/>
+   [dash]:<https://github.com/plotly/dash-sample-apps/tree/master/apps/dash-opioid-epidemic>
