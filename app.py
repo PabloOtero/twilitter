@@ -23,13 +23,17 @@ app.title = 'Twilitter'
 
 server = app.server
 
-# Load data
+## Load data from local directory
+#APP_PATH = str(pathlib.Path(__file__).parent.resolve())
+#df = pd.read_csv(
+#    os.path.join(APP_PATH, os.path.join("data", "output.csv"))
+#)
 
-APP_PATH = str(pathlib.Path(__file__).parent.resolve())
-
-df = pd.read_csv(
-    os.path.join(APP_PATH, os.path.join("data", "output.csv"))
-)
+## Load data from public Google Drive
+orig_url='https://drive.google.com/file/d/1LTJOExzF6aWREh_0AFLWloDN97LNE-nX/view?usp=sharing'
+file_id = orig_url.split('/')[-2]
+path = 'https://drive.google.com/uc?export=download&id=' + file_id
+df = pd.read_csv(path)
 
 
 #mapbox_token hidden in file (or in this case, load it from Heroku dashboard)
