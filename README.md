@@ -3,7 +3,6 @@
 
 [Have a look to this app][app]
 
-[alt text](https://github.com/PabloOtero/twilitter/blob/main/images/twilitter.png)
 ![plotly-dash-screencast](images/twilitter.png)
 
 ## Features
