@@ -24,3 +24,10 @@ As the original files are very large, another csv file has been created containi
 
 To learn more about the preprocessing:
 _Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis to assess the interest of citizens on the  impact of marine plastic pollution. Submitted._
+
+**Free Software, Hell Yeah!**
+
+[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
+
+   [wiki]: <https://en.wikipedia.org/wiki/Plastic_Beach>
+   [app]: <http://twilitter.herokuapp.com/>
