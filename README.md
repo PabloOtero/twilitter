@@ -20,11 +20,13 @@ This Dash app loads data from a csv file. This file contains info related to twe
 - Sentiment analysis is computed, coordinates obtained from user profile whenever possible by using OpenStreetMap, etc.
 - Data are stored in csv files.
 
-As the original files are very large, another csv file has been created containing the minimum information necessary for the Dash application. You can find an example in 'data' folder.
+As the original files are very large, another csv file has been created containing the minimum information necessary for the Dash application. You can find this final file in the 'data' folder.
 
 To learn more about the preprocessing:
 _Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis to assess the interest of citizens on the  impact of marine plastic pollution. Submitted._
 
+### Running the app locally
+We suggest you to create a separate virtual environment running Python 3 for this app, and install all of the required dependencies there.
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
