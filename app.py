@@ -20,6 +20,9 @@ import dash_daq as daq
 import networkx as nx
 
 
+
+
+
 # Initialize app
 app = dash.Dash(
     __name__, suppress_callback_exceptions=True,
@@ -38,7 +41,7 @@ APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 #     os.path.join(APP_PATH, os.path.join("data", "output.csv"))
 # )
 
-# Read from public url in Google drive
+# Read tweets from public url in Google drive
 url = 'https://drive.google.com/file/d/1LTJOExzF6aWREh_0AFLWloDN97LNE-nX/view?usp=sharing'
 path = 'https://drive.google.com/uc?export=download&id='+url.split('/')[-2]
 df = pd.read_csv(path)
@@ -296,8 +299,109 @@ def create_map(dff):
 
 def load_network():
      
-    G = nx.read_edgelist("./data/tweets.edgelist")
+    #The good option would be to read it locally from file, but Heroku does
+    #not allow to read static files  
+    #G = nx.read_edgelist("./data/tweets.edgelist")
     
+    #Thus, we have created a list and parse instead read
+    edgelist = ["help us {'weight': 9030}",
+                "ocean plastic {'weight': 82660}",
+                "ocean end {'weight': 15510}",
+                "ocean every {'weight': 14420}",
+                "ocean free {'weight': 14270}",
+                "ocean year {'weight': 12040}",
+                "ocean dumped {'weight': 10980}",
+                "ocean atlantic {'weight': 10650}",
+                "ocean pollution {'weight': 7370}",
+                "ocean cleanup {'weight': 8440}",
+                "ocean pacific {'weight': 8440}",
+                "ocean waste {'weight': 6810}",
+                "ocean recycled {'weight': 7890}",
+                "ocean entering {'weight': 6640}",
+                "ocean bottom {'weight': 6490}",
+                "ocean happening {'weight': 5570}",
+                "ocean fish {'weight': 5100}",
+                "ocean '' {'weight': 5060}",
+                "plastic beach {'weight': 5370}",
+                "plastic pollution {'weight': 121000}",
+                "plastic waste {'weight': 73480}",
+                "plastic bags {'weight': 31600}",
+                "plastic straws {'weight': 25530}",
+                "plastic bottles {'weight': 24730}",
+                "plastic tons {'weight': 19510}",
+                "plastic tonnes {'weight': 19360}",
+                "plastic marine {'weight': 18030}",
+                "plastic bag {'weight': 15560}",
+                "plastic use {'weight': 5200}",
+                "plastic fish {'weight': 13440}",
+                "plastic much {'weight': 12810}",
+                "plastic single-use {'weight': 11080}",
+                "plastic amount {'weight': 10380}",
+                "plastic dumped {'weight': 10350}",
+                "plastic end {'weight': 10010}",
+                "plastic reduce {'weight': 9970}",
+                "plastic free {'weight': 9420}",
+                "plastic debris {'weight': 8530}",
+                "plastic recycled {'weight': 8450}",
+                "plastic like {'weight': 8370}",
+                "plastic made {'weight': 8350}",
+                "plastic trash {'weight': 8030}",
+                "plastic bottle {'weight': 7990}",
+                "plastic pieces {'weight': 6810}",
+                "plastic truckload {'weight': 6800}",
+                "plastic surgery {'weight': 6690}",
+                "plastic oceans {'weight': 6580}",
+                "plastic dumping {'weight': 6430}",
+                "plastic full {'weight': 6420}",
+                "plastic consequence {'weight': 6400}",
+                "plastic using {'weight': 6310}",
+                "plastic entering {'weight': 6280}",
+                "plastic pounds {'weight': 5900}",
+                "plastic tree {'weight': 5860}",
+                "plastic garbage {'weight': 5830}",
+                "plastic straw {'weight': 5800}",
+                "plastic world {'weight': 5090}",
+                "change climate {'weight': 9040}",
+                "make bags {'weight': 5050}",
+                "killing marine {'weight': 6860}",
+                "life marine {'weight': 36440}",
+                "love i {'weight': 5390}",
+                "people lets {'weight': 19170}",
+                "people minute {'weight': 6480}",
+                "people fish {'weight': 6440}",
+                "people year {'weight': 6340}",
+                "clean beach {'weight': 6300}",
+                "made recycled {'weight': 8200}",
+                "debris marine {'weight': 5270}",
+                "million tonnes {'weight': 17940}",
+                "million tons {'weight': 11180}",
+                "million estimated {'weight': 8080}",
+                "million metric {'weight': 5370}",
+                "animals marine {'weight': 8550}",
+                "pollution truckload {'weight': 6480}",
+                "pollution likely {'weight': 6460}",
+                "pollution estimated {'weight': 6390}",
+                "pollution free {'weight': 5520}",
+                "free us {'weight': 6490}",
+                "pacific garbage {'weight': 5140}",
+                "use single {'weight': 11520}",
+                "fishing nets {'weight': 11200}",
+                "fishing gear {'weight': 7360}",
+                "going likely {'weight': 6440}",
+                "going consequence {'weight': 6390}",
+                "let us {'weight': 14180}",
+                "every year {'weight': 16210}",
+                "every minute {'weight': 9240}",
+                "garbage patch {'weight': 6060}",
+                "year per {'weight': 5670}",
+                "waste countries {'weight': 8570}",
+                "die lets {'weight': 19160}",
+                "metric tons {'weight': 6130}",
+                "sign petition {'weight': 5280}",
+                "islands future {'weight': 6830}"]
+    
+    G = nx.parse_edgelist(edgelist)
+      
     pos = nx.spring_layout(G, k=2)
     
     # edges trace
