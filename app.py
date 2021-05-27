@@ -20,9 +20,6 @@ import dash_daq as daq
 import networkx as nx
 
 
-
-
-
 # Initialize app
 app = dash.Dash(
     __name__, suppress_callback_exceptions=True,
@@ -54,11 +51,10 @@ df.loc[df.city_from_profile == 'City of Westminster', 'city_from_profile'] = "Lo
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
 
 ## mapbox token hidden in local file
-#px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
+#Ðpx.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
 ## or loaded from Heroku dashboard
 mapbox_access_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
 px.set_mapbox_access_token(mapbox_access_token)
-
 
 # Plot time series once
 df2 = (pd.to_datetime(df['created_at']).dt.floor('d').value_counts().rename_axis('date').reset_index(name='count'))
@@ -169,44 +165,21 @@ div_tab1 = html.Div(
                     [
                         html.Div(
                             id="indicator",
-                            className="six columns pretty_container",
+                            className="twelve columns pretty_container",
                             children=[
                                 html.P(
                                     [
-                                        "Number of Tweets with location",                                     
+                                        "Number of located Tweets",                                     
                                     ],
                                     className="container_title",
                                 ),
-                                dcc.Loading(
+                                dcc.Loading(                                
                                     dcc.Graph(
-                                        id="indicator-graph",
-                                        figure=blank_fig(row_heights[0]),
-                                        config={"displayModeBar": False},
-                                    ),
-                                    className="svg-container",
-                                    style={"height": 150},
-                                ),
-                            ],                         
-                        ),
-                        html.Div(
-                            id="indicator2",
-                            className="six columns pretty_container",
-                            children=[
-                                html.P(
-                                    [
-                                        "Sentiment score",                                     
-                                    ],
-                                    className="container_title",
-                                ),
-                                daq.GraduatedBar(
-                                        id='my-graduated-bar',
-                                        color={"gradient":True,"ranges":{"red":[0,3.5],"yellow":[3.5,6.5],"green":[6.5,10]}},
-                                        showCurrentValue=False,
-                                        label=" <--Negative | Positive -->",
-                                        value=6
-                                    ),
-                            ],                         
-                        ),                       
+                                        id='pie-chart',
+                                    )
+                                )
+                            ], style={'width': '100%', 'display': 'inline-block'},
+                        ),                      
                         html.Div(
                             id="graph-container2",
                             children=[
@@ -613,10 +586,8 @@ def sort_mentions(dff):
 
 
 @app.callback(
-    #Output("time-series-title", "children"),
-    Output("indicator-graph", "figure"),
-    Output("my-graduated-bar", "value"),
     Output("selected-data", "figure"),
+    Output("pie-chart", "figure"),
     [
         Input("county-choropleth", "selectedData"),
         Input("chart-dropdown", "value"),
@@ -748,33 +719,41 @@ def display_selected_data(selected_points, chart_dropdown, relayoutData):
     fig_layout["margin"]["l"] = 50       
 
 
-    n_selected=len(dff)
+    # Build sentiment count figure
+    num_pos = dff['polarity'][dff['polarity']>0.3].count()
+    num_neg = dff['polarity'][dff['polarity']<-0.3].count()
+    num_neu = len(dff['polarity'])-num_pos-num_neg
     
-    # Build indicator figure
-    n_selected_indicator = {
-        "data": [
-            {
-                "type": "indicator",
-                "value": n_selected,
-                "number": {"font": {"color": "#7FDBFF"}},
-            }
+    figure_pie={
+        'data': [
+            go.Pie(
+                labels=['Positives', 'Negatives', 'Neutrals'], 
+                values=[num_pos, num_neg, num_neu],
+                name="View Metrics",
+                marker_colors=['rgba(171, 220, 49, 1)','rgba(255, 50, 50, 1)','rgba(127, 175, 223, 1)'],
+                textinfo='value',
+                hole=.65)
         ],
-        "layout": {
-            "template": template,
-            "height": 50,
-            "margin": {"l": 10, "r": 10, "t": 10, "b": 10},
-        },
+        'layout':{
+            'showlegend':True,
+            'plot_bgcolor':"#1f2630",
+            'paper_bgcolor':"#1f2630",
+            'font': {"color": 'white'},
+            'annotations':[
+                dict(
+                    text='{0:.1f}K'.format((num_pos+num_neg+num_neu)/1000),
+                    font=dict(
+                        size=40
+                    ),
+                    showarrow=False
+                )
+            ]
+        }        
     }
     
-    sentiment_mean=dff['polarity'].mean()
-    
-    #From [-1, 1] to [0, 10] range
-    sentiment_mean=(sentiment_mean+1)*5
-
     return  (
-        n_selected_indicator,
-        sentiment_mean,
         fig,
+        figure_pie,
     )
 
 
