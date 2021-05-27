@@ -50,9 +50,14 @@ df = pd.read_csv(path)
 df = df.loc[(df['lat'] > -89) & (df['lat'] < 89) & (df['lon'] > -179) & (df['lon'] < 179)]
 df.loc[df.city_from_profile == 'City of Westminster', 'city_from_profile'] = "London"
 
-#mapbox_token hidden in file
+#mapbox style
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
-px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
+
+## mapbox token hidden in local file
+#px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
+## or loaded from Heroku dashboard
+mapbox_access_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
+px.set_mapbox_access_token(mapbox_access_token)
 
 
 # Plot time series once
