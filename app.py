@@ -1,46 +1,55 @@
+"""
+Twilitter Dash App
+
+@author: pablo.otero@ieo.es
+
+Last version: May 2021
+"""
+
 import os
 import pathlib
-#import re
 import plotly.express as px
+import plotly.figure_factory as ff
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
+import plotly.graph_objects as go
+import dash_daq as daq
+import networkx as nx
 
-#import cufflinks as cf
 
 # Initialize app
-
 app = dash.Dash(
-    __name__,
+    __name__, suppress_callback_exceptions=True,
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
-    ],
+    ]   
 )
-
 app.title = 'Twilitter'
-
 server = app.server
 
-## Load data from local directory
-#APP_PATH = str(pathlib.Path(__file__).parent.resolve())
-#df = pd.read_csv(
-#    os.path.join(APP_PATH, os.path.join("data", "output.csv"))
-#)
 
-## Load data from public Google Drive
-orig_url='https://drive.google.com/file/d/1LTJOExzF6aWREh_0AFLWloDN97LNE-nX/view?usp=sharing'
-file_id = orig_url.split('/')[-2]
-path = 'https://drive.google.com/uc?export=download&id=' + file_id
+# Load data
+APP_PATH = str(pathlib.Path(__file__).parent.resolve())
+
+# df = pd.read_csv(
+#     os.path.join(APP_PATH, os.path.join("data", "output.csv"))
+# )
+
+# Read from public url in Google drive
+url = 'https://drive.google.com/file/d/1LTJOExzF6aWREh_0AFLWloDN97LNE-nX/view?usp=sharing'
+path = 'https://drive.google.com/uc?export=download&id='+url.split('/')[-2]
 df = pd.read_csv(path)
 
 
-#mapbox_token hidden in file (or in this case, load it from Heroku dashboard)
+df = df.loc[(df['lat'] > -89) & (df['lat'] < 89) & (df['lon'] > -179) & (df['lon'] < 179)]
+df.loc[df.city_from_profile == 'City of Westminster', 'city_from_profile'] = "London"
+
+#mapbox_token hidden in file
 mapbox_style = "mapbox://styles/plotlymapbox/cjvprkf3t1kns1cqjxuxmwixz"
-mapbox_access_token = os.environ.get('MAPBOX_ACCESS_TOKEN')
-px.set_mapbox_access_token(mapbox_access_token)
-#px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
+px.set_mapbox_access_token(open(os.path.join(APP_PATH, 'mapbox_token')).read())
 
 
 # Plot time series once
@@ -64,33 +73,43 @@ fig2_layout["xaxis"]["gridcolor"] = "#5b5b5b"
 fig2_layout["yaxis"]["gridcolor"] = "#5b5b5b"     
 
 
+tabs_styles = {
+    'height': '44px',
+    'fontSize': '18px',
+}
+tab_style = {
+    'padding': '6px',
+    'fontWeight': 'bold',
+}
+tab_selected_style = {
+    'backgroundColor': "#7FDBFF",
+    'color': 'white',
+    'padding': '6px'
+}
 
-app.layout = html.Div(      
+# Figure template
+row_heights = [150, 500, 300]
+template = {"layout": {"paper_bgcolor": "#1f2630", "plot_bgcolor": "#1f2630"}}
+
+def blank_fig(height):
+    """
+    Build blank figure with the requested height
+    """
+    return {
+        "data": [],
+        "layout": {
+            "height": height,
+            "template": template,
+            "xaxis": {"visible": False},
+            "yaxis": {"visible": False},
+        },
+    }
+
+
+div_tab1 = html.Div(      
     id="root",
     children=[
-        html.Div(
-            id="header",
-            children=[
-                html.Img(id="logo", src=app.get_asset_url("ieo.svg")),
-                html.H4(children="Twilitter"),
-                html.P(
-                    id="description",
-                    children="Tweets containing words 'plastic' or 'microplastic' in combination with any \
-                    of these words: 'coast[s]', 'beach[es]', 'marine', 'ocean[s]'. Following languages have been \
-                    taken into consideration: English, Japanese, Spanish, Portuguese, French, Italian, Malaysian, \
-                    German, Turkish, Thai, Korean and Indi. The dataset has undergone pre-processing to eliminate \
-                    as far as possible unrelated tweets. In this visualization, the bots have not been eliminated \
-                    so caution must be exercised in the interpretation. These data can be helpful to assess the impact \
-                    of NGOs, international organizations and academic institutions that wish to play a relevant role \
-                    in the fight against marine pollution by plastics, environmental awareness and scientific dissemination.",
-                ),
-                html.P(
-                    id="description2",
-                    children="To learn more and cite: Otero, P., J. Gago, P. Quintas, 2021. Twitter data analysis \
-                    to assess the interest of citizens on the  impact of marine plastic pollution. Submitted.",
-                ),                    
-            ],
-        ),
+
 
         html.Div(
             id="app-container",
@@ -101,7 +120,7 @@ app.layout = html.Div(
                         html.Div(
                             id="heatmap-container",
                             children=[
-                                html.P("Sentiment map of tweets. The warmer the color, the more positive the feeling.",
+                                html.P("Map of tweets' volume.",
                                     id="heatmap-title",
                                 ),
                                 html.P("Use the box select tool to make a subset.",
@@ -137,11 +156,49 @@ app.layout = html.Div(
                             ],
                         ),
                     ],
-                ),
-                
+                ),                
                 html.Div(
-                    id="graph-container",
-                    children=[             
+                    [
+                        html.Div(
+                            id="indicator",
+                            className="six columns pretty_container",
+                            children=[
+                                html.P(
+                                    [
+                                        "Number of Tweets with location",                                     
+                                    ],
+                                    className="container_title",
+                                ),
+                                dcc.Loading(
+                                    dcc.Graph(
+                                        id="indicator-graph",
+                                        figure=blank_fig(row_heights[0]),
+                                        config={"displayModeBar": False},
+                                    ),
+                                    className="svg-container",
+                                    style={"height": 150},
+                                ),
+                            ],                         
+                        ),
+                        html.Div(
+                            id="indicator2",
+                            className="six columns pretty_container",
+                            children=[
+                                html.P(
+                                    [
+                                        "Sentiment score",                                     
+                                    ],
+                                    className="container_title",
+                                ),
+                                daq.GraduatedBar(
+                                        id='my-graduated-bar',
+                                        color={"gradient":True,"ranges":{"red":[0,3.5],"yellow":[3.5,6.5],"green":[6.5,10]}},
+                                        showCurrentValue=False,
+                                        label=" <--Negative | Positive -->",
+                                        value=6
+                                    ),
+                            ],                         
+                        ),                       
                         html.Div(
                             id="graph-container2",
                             children=[
@@ -180,8 +237,7 @@ app.layout = html.Div(
                                     ]
                                 )
                             ],
-                        ),
-                        
+                        ),                     
                         html.Div(
                             id="description3",
                             children=[
@@ -207,20 +263,165 @@ app.layout = html.Div(
 ])
 
 
-def create_map(dff):
-    fig = px.scatter_mapbox(dff, lat="lat", lon="lon", color="polarity",
-        color_continuous_scale=px.colors.cyclical.IceFire, size_max=8, zoom=1,
-        mapbox_style=mapbox_style, hover_data=["lat", "lon", "polarity"]) 
+                                      
+# Scatter plot map with sentiments                                             
+# def create_map(dff):
+#     fig = px.scatter_mapbox(dff, lat="lat", lon="lon", color="polarity",
+#         color_continuous_scale=px.colors.cyclical.IceFire, size_max=8, zoom=1,
+#         mapbox_style=mapbox_style, hover_data=["lat", "lon", "polarity"]) 
 
-    fig.update_layout(
-        paper_bgcolor = "#1f2630",
-        font_color='#7FDBFF',
-        hovermode="closest",
-        margin=dict(r=0, l=0, t=0, b=0),
-        height= 300,
-    ) 
+#     fig.update_layout(
+#         paper_bgcolor = "#1f2630",
+#         font_color='#7FDBFF',
+#         hovermode="closest",
+#         margin=dict(r=0, l=0, t=0, b=0),
+#         height= 300,
+#     ) 
+    
+#     return fig
+
+
+def create_map(dff):
+    fig = ff.create_hexbin_mapbox(data_frame=dff, lat="lat", lon="lon", 
+                                  nx_hexagon=100, opacity=0.5, 
+                                  labels={"color": "Tweet Count"}, 
+                                  color_continuous_scale="Viridis",
+                                  mapbox_style="carto-positron",
+                                  min_count=1) 
+
+    fig.update_layout(margin=dict(b=0, t=0, l=0, r=0))
     
     return fig
+
+
+def load_network():
+     
+    G = nx.read_edgelist("./data/tweets.edgelist")
+    
+    pos = nx.spring_layout(G, k=2)
+    
+    # edges trace
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(color="#7FDBFF", width=1),
+        hoverinfo='none',
+        showlegend=False,
+        mode='lines')
+
+    # nodes trace
+    node_x = []
+    node_y = []
+    text = []
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        text.append(node)
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y, text=text,
+        mode='markers',
+        showlegend=False,
+        hoverinfo='text',
+        marker=dict(
+                showscale=True,
+                # colorscale options
+                #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+                #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+                #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+                colorscale='YlOrRd',
+                reversescale=False,
+                color=[],
+                size=15,
+                colorbar=dict(
+                    thickness=15,
+                    title='Node Connections',
+                    xanchor='left',
+                    titleside='right',
+                    bgcolor='white',
+                ),
+                line_width=2))
+    
+    # color marker by adjacency
+    node_adjacencies = []
+    for node, adjacencies in enumerate(G.adjacency()):
+        node_adjacencies.append(len(adjacencies[1]))   
+    node_trace.marker.color = node_adjacencies
+  
+    fig = go.Figure(data=[edge_trace, node_trace],
+             layout=go.Layout(
+                title='<br>Top-100 word bigrams of the overall period.',
+                height=700,
+                titlefont_size=16,
+                titlefont_color="#d6a622",
+                plot_bgcolor="#1f2630",
+                paper_bgcolor="#1f2630",
+                showlegend=False,
+                hovermode='closest',
+                margin=dict(b=20,l=5,r=5,t=40),
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)),
+                )
+    
+    return fig
+
+
+app.layout = html.Div([
+    html.Div(
+        id="header",
+        children=[
+            html.Img(id="logo", src=app.get_asset_url("ieo.svg")),
+            html.H4(children="Twilitter"),
+            html.P(
+                id="description",
+                children="Tweets containing words 'plastic' or 'microplastic' in combination with any \
+                of these words: 'coast[s]', 'beach[es]', 'marine', 'ocean[s]'. Following languages have been \
+                taken into consideration: English, Japanese, Spanish, Portuguese, French, Italian, Malaysian, \
+                German, Turkish, Thai, Korean and Indi. The dataset has undergone pre-processing to eliminate \
+                as far as possible unrelated tweets. In this visualization, the bots have not been eliminated \
+                so caution must be exercised in the interpretation. These data can be helpful to assess the impact \
+                of NGOs, international organizations and academic institutions that wish to play a relevant role \
+                in the fight against marine pollution by plastics, environmental awareness and scientific dissemination.",
+            ),
+            html.P(
+                id="description2",
+                children="To learn more and cite: Otero, P., J. Gago, P. Quintás, 2021. Twitter data analysis \
+                to assess the interest of citizens on the  impact of marine plastic pollution. Submitted.",
+            ),                    
+        ],
+    ),   
+    dcc.Tabs(id='tabs-example', value='tab-1', children=[
+        dcc.Tab(label='Volume analysis', value='tab-1', style=tab_style, selected_style=tab_selected_style),
+        dcc.Tab(label='Graph network', value='tab-2', style=tab_style, selected_style=tab_selected_style),
+    ], style=tabs_styles),
+    html.Div(id='tabs-example-content')
+])
+
+
+@app.callback(Output('tabs-example-content', 'children'),
+              Input('tabs-example', 'value'))
+def render_content(tab):
+    if tab == 'tab-1':
+        return div_tab1
+    elif tab == 'tab-2':
+        return html.Div(      
+            children=[
+                dcc.Graph(figure=load_network())         
+            ]
+        )
+
     
 @app.callback(
     Output('county-choropleth', 'figure'),
@@ -304,6 +505,8 @@ def sort_mentions(dff):
 
 @app.callback(
     #Output("time-series-title", "children"),
+    Output("indicator-graph", "figure"),
+    Output("my-graduated-bar", "value"),
     Output("selected-data", "figure"),
     [
         Input("county-choropleth", "selectedData"),
@@ -313,7 +516,7 @@ def sort_mentions(dff):
 )
 def display_selected_data(selected_points, chart_dropdown, relayoutData):
     
-        
+   
     if relayoutData is None:  
         dff=df
     else:
@@ -324,19 +527,39 @@ def display_selected_data(selected_points, chart_dropdown, relayoutData):
             dff=df
        
     if selected_points is not None:
-        selected_lats = []
-        selected_lons = []
-        for i in range(len(selected_points['points'])):
-            selected_lats.append(float(selected_points['points'][i]['lat']))
-            selected_lons.append(float(selected_points['points'][i]['lon']))
-        dff = dff[ (dff['lat']>=min(selected_lats)) & \
-                   (dff['lat']<=max(selected_lats)) & \
-                   (dff['lon']>=min(selected_lons)) & \
-                   (dff['lon']<=max(selected_lons)) ]
-
-    date_start = pd.to_datetime(dff['created_at'].iloc[0]).strftime("%d %b %Y")
-    date_end   = pd.to_datetime(dff['created_at'].iloc[-1]).strftime("%d %b %Y")    
-
+        # This works with scatter plot
+        # selected_lats = []
+        # selected_lons = []
+        # for i in range(len(selected_points['points'])):
+        #     selected_lats.append(float(selected_points['points'][i]['lat']))
+        #     selected_lons.append(float(selected_points['points'][i]['lon']))
+        # dff = dff[ (dff['lat']>=min(selected_lats)) & \
+        #            (dff['lat']<=max(selected_lats)) & \
+        #            (dff['lon']>=min(selected_lons)) & \
+        #            (dff['lon']<=max(selected_lons)) ]
+        try:
+            coords = selected_points['range']['mapbox']
+            min_lat = min([float(item[1]) for item in coords])
+            max_lat = max([float(item[1]) for item in coords])
+            min_lon = min([float(item[0]) for item in coords])
+            max_lon = max([float(item[0]) for item in coords])
+            dff = dff[ (dff['lat']>=min_lat) & \
+                       (dff['lat']<=max_lat) & \
+                       (dff['lon']>=min_lon) & \
+                       (dff['lon']<=max_lon) ]
+            update_map_with_dates(relayoutData)
+        except:
+            pass
+     
+    try:
+        date_start = pd.to_datetime(dff['created_at'].min()).strftime("%d %b %Y")
+    except:
+        date_start = pd.to_datetime(dff['created_at'].iloc[0]).strftime("%d %b %Y")
+    try:
+        date_end   = pd.to_datetime(dff['created_at'].max()).strftime("%d %b %Y")
+    except:
+        date_end   = pd.to_datetime(dff['created_at'].iloc[-1]).strftime("%d %b %Y") 
+    
 
     if chart_dropdown == "hashtags": 
         title='Most used hashtags<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
@@ -375,26 +598,26 @@ def display_selected_data(selected_points, chart_dropdown, relayoutData):
         dff_cities = dff[['city_from_profile']].dropna()
         dff_cities = dff_cities['city_from_profile'].value_counts()
         dff_cities=dff_cities[:20]
-        title='Cities with more tweets (either geopositioning or user profile) <br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
+        title='Cities with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
 
         fig = px.bar(dff_cities, x=dff_cities.index, y='city_from_profile', \
                      title=title, color_discrete_sequence =['#7FDBFF']*len(dff_cities),
                      labels={
                      "x": "Top cities",
-                     "city_from_profile": "Tweet volume",
+                     "city_from_profile": "Tweet volume from city",
                      },
         )
     else:
         dff_countries = dff[['country_from_profile']].dropna()
         dff_countries = dff_countries['country_from_profile'].value_counts()
         dff_countries=dff_countries[:20]
-        title='Nationalities (from user profile) with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
+        title='Countries with more tweets<br>from {0} '.format(date_start) + 'to {0} '.format(date_end)        
         
         fig = px.bar(dff_countries, x=dff_countries.index, y='country_from_profile', \
                      title=title, color_discrete_sequence =['#7FDBFF']*len(dff_countries),
                      labels={
-                     "x": "Top nationalities",
-                     "country_from_profile": "Tweet volume",
+                     "x": "Top countries",
+                     "country_from_profile": "Tweet volume from country",
                      },
         )
                
@@ -415,8 +638,35 @@ def display_selected_data(selected_points, chart_dropdown, relayoutData):
     fig_layout["margin"]["b"] = 100
     fig_layout["margin"]["l"] = 50       
 
+
+    n_selected=len(dff)
     
-    return  fig
+    # Build indicator figure
+    n_selected_indicator = {
+        "data": [
+            {
+                "type": "indicator",
+                "value": n_selected,
+                "number": {"font": {"color": "#7FDBFF"}},
+            }
+        ],
+        "layout": {
+            "template": template,
+            "height": 50,
+            "margin": {"l": 10, "r": 10, "t": 10, "b": 10},
+        },
+    }
+    
+    sentiment_mean=dff['polarity'].mean()
+    
+    #From [-1, 1] to [0, 10] range
+    sentiment_mean=(sentiment_mean+1)*5
+
+    return  (
+        n_selected_indicator,
+        sentiment_mean,
+        fig,
+    )
 
 
 if __name__ == "__main__":
