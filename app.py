@@ -480,7 +480,8 @@ app.layout = html.Div([
             html.P(
                 id="description2",
                 children="To learn more and cite: Otero, P., J. Gago, P. Quintás, 2021. Twitter data analysis \
-                to assess the interest of citizens on the  impact of marine plastic pollution. Submitted.",
+                to assess the interest of citizens on the  impact of marine plastic pollution. Marine Pollution Bulletin, \
+                Volume 170, 112620, ISSN 0025-326X, https://doi.org/10.1016/j.marpolbul.2021.112620.",
             ),                    
         ],
     ),   
